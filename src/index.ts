@@ -10,6 +10,9 @@ import cors from 'cors';
 const app = express();
 const path = './teamIds.json';
 const teamStatsPath = './teamStats.json';
+const leagueResult = './leagueResults.json'
+
+const leagueResultpath = './season2015Results.json'
 
 let allTeamStats: any = [];
 app.use(cors());
@@ -157,6 +160,37 @@ app.get('/fetch-teamStats', async (req: Request, res: Response) => {
   }
 });
 
+
+app.get('/fetch-result', async (req: Request, res: Response) => {
+  // first one is 33
+  
+  const config: AxiosRequestConfig = {
+    method: 'get',
+    url: 'https://v3.football.api-sports.io/fixtures?league=39&season=2015',
+    headers: {
+      'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+      'x-rapidapi-host': 'v3.football.api-sports.io',
+    },
+    params: {
+      
+    },
+
+    timeout: 5000
+  };
+
+  try {
+    const response = await axios(config);
+
+    await fs.promises.writeFile(leagueResultpath, JSON.stringify(response.data.response, null, 2), 'utf-8');
+    console.log("Successfully wrote to file!");
+
+    res.json({ message: "File written successfully", data: response.data.response });
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Failed to fetch leagues' });
+  }
+});
 
 
 app.get('/', async (req: Request, res: Response) => {

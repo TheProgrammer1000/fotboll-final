@@ -160,7 +160,9 @@ const PremierLeagueTable: React.FC = () => {
                         <strong>Goals For:</strong> Home: {team.goalsForHome} | Away:{' '}
                         {team.goalsForAway}
                       </p>
-                      <div className="chart-container">
+                      
+                   
+                      {/* <div className="chart-container">
                         <Bar
                           data={{
                             labels: ['Home', 'Away'],
@@ -188,7 +190,7 @@ const PremierLeagueTable: React.FC = () => {
                             },
                           }}
                         />
-                      </div>
+                      </div> */}
                     </div>
                   </td>
                 </tr>

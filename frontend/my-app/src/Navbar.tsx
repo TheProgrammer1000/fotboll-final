@@ -12,6 +12,7 @@ const Navbar: React.FC = () => (
       <li>
         <Link to="/prediction">Prediction</Link>
       </li>
+      <li><Link to="/head-to-head">Head to Head</Link></li>
     </ul>
   </nav>
 );

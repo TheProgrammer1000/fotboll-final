@@ -9,11 +9,30 @@ import helmet from 'helmet';
 
 
 const app = express();
-const path = './teamIds.json';
-const teamStatsPath = './teamStats.json';
-const leagueResult = './leagueResults.json'
 
+const teamIdPath = './teamIds.json';
+const teamStatsPath = './teamStats.json';
 const leagueResultpath = './seasonResults.json'
+const oddsOfSeasonPath = './oddsSeasonResult.json';
+
+
+
+// interface TeamStats {
+//   name: string;
+//   winsHome: number;
+//   winsAway: number;
+//   lossesHome: number;
+//   lossesAway: number;
+//   totalWins: number;
+//   draw: number;
+//   formHome: number;
+//   formAway: number;
+//   avgGoalsHome: number;
+//   avgGoalsAway: number;
+//   formHomeRating: { category: string; description: string };
+//   formAwayRating: { category: string; description: string };
+// }
+
 
 interface TeamStats {
   name: string;
@@ -21,9 +40,10 @@ interface TeamStats {
   winsAway: number;
   lossesHome: number;
   lossesAway: number;
-  totalWins: number; // New property
   draw: number;
+  totalWins: number;
 }
+
 
 
 let allTeamStats: any = [];
@@ -38,20 +58,7 @@ app.use(
   })
 );
 
-app.get('/get-teamStats-json', async (req: Request, res: Response) => {
-  try {
-    const fileContent = await fs.promises.readFile(teamStatsPath, 'utf-8');
-    const configData = JSON.parse(fileContent);
-
-    const arrayStatsOfTeam = configData;
- 
-
-    res.json(arrayStatsOfTeam);
-  } catch (error) {
-    console.error('Error reading or parsing file:', error);
-    res.status(500).json({ message: 'Failed to retrieve team IDs' });
-  }
-});
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 
 
@@ -77,7 +84,7 @@ app.get('/fetch-team-ids', async (req: Request, res: Response) => {
 
     console.log(response.data.response);
 
-    await fs.promises.writeFile(path, JSON.stringify(response.data.response, null, 2), 'utf-8');
+    await fs.promises.writeFile(teamIdPath, JSON.stringify(response.data.response, null, 2), 'utf-8');
     console.log("Successfully wrote to file!");
 
     res.json({ message: "File written successfully", data: response.data.response });
@@ -89,16 +96,12 @@ app.get('/fetch-team-ids', async (req: Request, res: Response) => {
 });
 
 
-
-// Helper function to delay execution for a given number of milliseconds.
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 /* 
   This reading from the config.json file that should already be all the team and their ids!!!!!
 */
 app.get('/fetch-teamStats', async (req: Request, res: Response) => {
   try {
-    const fileContent = await fs.promises.readFile(path, 'utf-8');
+    const fileContent = await fs.promises.readFile(teamIdPath, 'utf-8');
     const configData = JSON.parse(fileContent);
 
     
@@ -181,97 +184,35 @@ app.get('/fetch-teamStats', async (req: Request, res: Response) => {
   }
 });
 
-
-app.get('/fetch-result', async (req: Request, res: Response) => {
-  // first one is 33
-  
-  const config: AxiosRequestConfig = {
-    method: 'get',
-    url: 'https://v3.football.api-sports.io/fixtures?league=39&season=2013',
-    headers: {
-      'x-rapidapi-key': process.env.RAPIDAPI_KEY,
-      'x-rapidapi-host': 'v3.football.api-sports.io',
-    },
-    params: {
-      
-    },
-
-    timeout: 5000
-  };
-
+app.get('/get-fetch-teamStats-json', async (req: Request, res: Response) => {
   try {
-    const response = await axios(config);
 
-    await fs.promises.writeFile(leagueResultpath, JSON.stringify(response.data.response, null, 2), 'utf-8');
-    console.log("Successfully wrote to file!");
+    const fileTeamsStats = await fs.promises.readFile(teamStatsPath, 'utf-8');
+    const parseFileTeamsStats = JSON.parse(fileTeamsStats);
+    //console.log("Successfully wrote to file!");
 
-    res.json({ message: "File written successfully", data: response.data.response });
-
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    res.status(500).json({ message: 'Failed to fetch leagues' });
+    // Respond only once after successfully writing to file.
+    res.json(parseFileTeamsStats);
+  } 
+  catch (error) {
+    console.error('Error reading or parsing file:', error);
+    res.status(500).json({ message: 'Failed to retrieve team IDs' });
   }
 });
 
 
 
-app.get('/getResultByTeam/:id', async (req: Request, res: Response) => {
 
-  let IsEqualToTeamid = false;
-  
-  const teamId = parseInt(req.params.id, 10); // Extract 'id' from route parameters and convert to number
- 
-  //console.log('req.params.id: ', req.params.id);
+// Helper function to delay execution for a given number of milliseconds.
+//http://localhost:3000/head-to-head?team1=${selectedTeam1}&team2=${selectedTeam2}
 
-  const fileTeamId = await fs.promises.readFile(path, 'utf-8');
-  const parseFileTeamId = JSON.parse(fileTeamId);
-
-  
-  const teamIdsFinal = parseFileTeamId.map((entry: any) => {
-      return {
-        "id": entry.team.id,
-        "teamName": entry.team.name
-      }
-  });
-
-
-
-  for(let i = 0; i < teamIdsFinal.length; i++) {
-    if(teamIdsFinal[i].id == teamId) {
-      IsEqualToTeamid = true;
-      break;
-    }
-  }
-
-  if(IsEqualToTeamid == true) {
-
-    const fileContent = await fs.promises.readFile(leagueResult, 'utf-8');
-    const configData = JSON.parse(fileContent);
-    
-    // Assuming configData is an array of match objects
-    const matchesArray = [...configData];
-    let sortedMatchesTeam: any[] = []; // Explicitly declare as an array
-  
-    // Loop through matches and push those matching the teamId
-    for (let i = 0; i < matchesArray.length; i++) {    
-      if ((matchesArray[i].teams.home.id === teamId || matchesArray[i].teams.away.id === teamId) && matchesArray[i].teams.home.winner != null || matchesArray[i].teams.away.winner) {
-        sortedMatchesTeam.push(matchesArray[i]);
-      }
-    }
-
-    res.json(sortedMatchesTeam);
-  }
-  else {
-    res.status(500).json({ message: 'Failed to fetch team by teamID'});
-  }
-});
-app.get('/getResultByTeam/:firstId/:secoundId', async (req: Request, res: Response) => {
+app.get('/head-to-head/:firstId/:secoundId', async (req: Request, res: Response) => {
   const firstId = parseInt(req.params.firstId, 10);
   const secoundId = parseInt(req.params.secoundId, 10);
 
   try {
     // Read and parse the team IDs file
-    const fileTeamId = await fs.promises.readFile(path, 'utf-8');
+    const fileTeamId = await fs.promises.readFile(teamIdPath, 'utf-8');
     const parseFileTeamId = JSON.parse(fileTeamId);
 
     const teamIdsFinal = parseFileTeamId.map((entry: any) => ({
@@ -312,12 +253,12 @@ app.get('/getResultByTeam/:firstId/:secoundId', async (req: Request, res: Respon
       },
     };
 
-    const seasonsResults = "season2011To2024Results.json";
+  
 
     let sortedMatchesTeam: any[] = [];
 
     try {
-      const fileContent = await fs.promises.readFile(seasonsResults, 'utf-8');
+      const fileContent = await fs.promises.readFile(leagueResultpath, 'utf-8');
       console.log(fileContent);
       const matchesArray = JSON.parse(fileContent);
       console.log(matchesArray);
@@ -334,14 +275,11 @@ app.get('/getResultByTeam/:firstId/:secoundId', async (req: Request, res: Respon
       sortedMatchesTeam.push(...filteredMatches);
     } catch (err) {
       if (err instanceof Error) {
-        console.error(`Error reading or parsing ${seasonsResults}:`, err.message);
+        console.error(`Error reading or parsing ${leagueResultpath}:`, err.message);
       } else {
-        console.error(`Unknown error reading or parsing ${seasonsResults}:`, err);
+        console.error(`Unknown error reading or parsing ${leagueResultpath}:`, err);
       }
     }
-
-
-    console.log('sortedMatchesTeam: ', sortedMatchesTeam);
 
 
     const sinceSeason = 2011;
@@ -386,7 +324,7 @@ app.get('/getResultByTeam/:firstId/:secoundId', async (req: Request, res: Respon
       }
     }
 
-    sortedMatchesTeam.reverse();
+    //sortedMatchesTeam.reverse();
 
 
     res.status(200).json({
@@ -458,6 +396,59 @@ app.get('/fetch-all-seasons-results', async (req: Request, res: Response) => {
 });
 
 
+
+app.get('/getOdds/:season', async (req: Request, res: Response) => {
+  const seasonQueryParameter = parseInt(req.params.season, 10);
+
+
+  const config: AxiosRequestConfig = {
+    method: 'get',
+    url: `https://v3.football.api-sports.io/odds?league=39&season=${seasonQueryParameter}`,
+    headers: {
+      'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+      'x-rapidapi-host': 'v3.football.api-sports.io',
+    },
+    params: {
+      
+    },
+
+    timeout: 5000
+  };
+
+  try {
+    const response = await axios(config);
+
+    await fs.promises.writeFile(oddsOfSeasonPath, JSON.stringify(response.data.response, null, 2), 'utf-8');
+    console.log("Successfully wrote to file!");
+
+    
+
+    res.json({ message: "File written successfully", data: response.data.response});
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Failed to fetch leagues' });
+  }
+  // await fs.promises.writeFile('./teamStats.json', 'Tjaba', 'utf-8');
+  // console.log("Successfully wrote to file!");
+});
+
+
+app.get('/getOdds-from-json', async (req: Request, res: Response) => {
+
+  try {
+
+    const oddsOfSeasonREsult = await fs.promises.readFile(oddsOfSeasonPath, 'utf-8');
+    const parseOddsOfSeasonREsult = JSON.parse(oddsOfSeasonREsult);
+
+    res.json({ data: parseOddsOfSeasonREsult});
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Failed to fetch leagues' });
+  }
+});
+
 app.get('/', async (req: Request, res: Response) => {
   // await fs.promises.writeFile('./teamStats.json', 'Tjaba', 'utf-8');
   // console.log("Successfully wrote to file!");
@@ -468,6 +459,46 @@ app.get('/', async (req: Request, res: Response) => {
 
 
 
+
+/*
+  Included both home and away statistics for both teams
+
+  Added advanced metrics:
+        Form points (3 for win, 1 for draw)
+        Average goals scored
+        Last 5 matches performance
+
+    Maintained the original response structure while adding new fields
+
+The response will now include:
+
+    Traditional stats (wins/losses/draws)
+
+    Form points (average points per match in last 5 home/away matches)
+
+    Average goals scored in last 5 home/away matches
+
+    Full match history between the teams
+
+
+
+*/
+
+app.get('/form-rating-guide', (req: Request, res: Response) => {
+  const guide = {
+    description: "Form ratings based on average points from last 5 matches (3=win, 1=draw, 0=loss)",
+    ratings: [
+      { range: "2.5-3.0", category: "Exceptional", description: "4-5 wins" },
+      { range: "2.0-2.4", category: "Strong", description: "3-4 wins" },
+      { range: "1.5-1.9", category: "Average", description: "1-2 wins" },
+      { range: "1.0-1.4", category: "Below Average", description: "0-1 wins" },
+      { range: "0.0-0.9", category: "Poor", description: "0 wins" }
+    ],
+    note: "Calculated using only the team's last 5 matches in the specified context (home/away)"
+  };
+
+  res.json(guide);
+})
 
 
 const port = process.env.SERVER_PORT || 3000;

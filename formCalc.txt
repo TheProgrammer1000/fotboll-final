@@ -1,0 +1,55 @@
+  Form Calculation Basics
+
+    3 points for a win
+
+    1 point for a draw
+
+    0 points for a loss
+
+    Average points per match over last 5 matches
+
+Your Specific Values
+
+    formHome: 1
+
+        Average points from last 5 home matches = 1.0
+
+        Total points = 1.0 * 5 = 5 points
+
+        Possible scenarios:
+
+            1 win (3) + 2 draws (1+1) + 2 losses = 5 points
+
+            5 draws (1×5) = 5 points
+
+        Indicates: Struggling home form
+
+    formAway: 2.6
+
+        Average points from last 5 away matches = 2.6
+
+        Total points = 2.6 * 5 = 13 points
+
+        Possible scenarios:
+
+            4 wins (3×4=12) + 1 draw (1) = 13 points
+
+            3 wins (9) + 4 draws (4) [but only 5 matches total]
+
+        Indicates: Excellent away form
+
+Why This Matters for Predictions
+
+    Maximum possible = 3.0 (5 wins)
+
+    Good form threshold ≈ 2.0+
+
+    Poor form threshold ≈ 1.0-
+
+Interpretation Guide
+Form Value	Rating	Typical Performance
+2.5-3.0	Exceptional	Consistent wins
+2.0-2.4	Strong	Regular wins with few draws
+1.5-1.9	Average	Mix of wins/draws/losses
+1.0-1.4	Below Average	More losses than wins
+0.0-0.9	Poor	Frequent losses

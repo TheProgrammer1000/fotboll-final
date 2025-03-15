@@ -5,6 +5,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import PredictionPage from './PredictionPage';
 import Navbar from './Navbar';
 import PremierLeagueTable from './PremierLeagueTable';
+// Import the new HeadToHeadPage
+import HeadToHeadPage from './HeadToHeadPage';
 
 
 function App() {
@@ -15,6 +17,7 @@ function App() {
         <Routes>
           <Route path="/" element={<PremierLeagueTable />} />
           <Route path="/prediction" element={<PredictionPage />} />
+          <Route path="/head-to-head" element={<HeadToHeadPage />} />
         </Routes>
       </BrowserRouter>
     </div>

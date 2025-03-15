@@ -42,7 +42,7 @@ const PremierLeagueTable: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get('http://localhost:3000/get-teamStats-json')
+      .get('http://localhost:3000/get-fetch-teamStats-json')
       .then((response) => {
         const rawTeams = response.data;
         // Transform the raw data into our TableTeam structure.

@@ -13,7 +13,7 @@ const path = './teamIds.json';
 const teamStatsPath = './teamStats.json';
 const leagueResult = './leagueResults.json'
 
-const leagueResultpath = './season2015Results.json'
+const leagueResultpath = './seasonResults.json'
 
 interface TeamStats {
   name: string;
@@ -187,7 +187,7 @@ app.get('/fetch-result', async (req: Request, res: Response) => {
   
   const config: AxiosRequestConfig = {
     method: 'get',
-    url: 'https://v3.football.api-sports.io/fixtures?league=39&season=2015',
+    url: 'https://v3.football.api-sports.io/fixtures?league=39&season=2013',
     headers: {
       'x-rapidapi-key': process.env.RAPIDAPI_KEY,
       'x-rapidapi-host': 'v3.football.api-sports.io',
@@ -312,55 +312,39 @@ app.get('/getResultByTeam/:firstId/:secoundId', async (req: Request, res: Respon
       },
     };
 
-    const seasonsNameJson = [
-      './season2024Results.json',
-      './season2023Results.json',
-      './season2022Results.json',
-      './season2021Results.json',
-      './season2020Results.json',
-      './season2019Results.json',
-      './season2018Results.json',
-      './season2017Results.json',
-      './season2016Results.json',
-      './season2015Results.json',
-    ];
+    const seasonsResults = "season2011To2024Results.json";
 
     let sortedMatchesTeam: any[] = [];
 
-    for (const seasonFile of seasonsNameJson) {
-      try {
-        const fileContent = await fs.promises.readFile(seasonFile, 'utf-8');
-        console.log(fileContent);
-        const matchesArray = JSON.parse(fileContent);
-        console.log(matchesArray);
+    try {
+      const fileContent = await fs.promises.readFile(seasonsResults, 'utf-8');
+      console.log(fileContent);
+      const matchesArray = JSON.parse(fileContent);
+      console.log(matchesArray);
 
-        // Filter matches between team1 and team2 with a valid result (status elapsed is not null)
-        const filteredMatches = matchesArray.filter(
-          (match: any) =>
-            (match.teams.home.id === team1.id &&
-              match.teams.away.id === team2.id &&
-              match.fixture.status.elapsed !== null) ||
-            (match.teams.home.id === team2.id &&
-              match.teams.away.id === team1.id &&
-              match.fixture.status.elapsed !== null)
-        );
+      // Filter matches between team1 and team2 with a valid result (status elapsed is not null)
+      const filteredMatches = matchesArray.filter(
+        (match: any) =>
+          (match.teams.home.id === team1.id &&
+            match.teams.away.id === team2.id) ||
+          (match.teams.home.id === team2.id &&
+            match.teams.away.id === team1.id)
+      );
 
-        sortedMatchesTeam.push(...filteredMatches);
-      } catch (err) {
-        if (err instanceof Error) {
-          console.error(`Error reading or parsing ${seasonFile}:`, err.message);
-        } else {
-          console.error(`Unknown error reading or parsing ${seasonFile}:`, err);
-        }
-        // Continue to next season file if one fails
-        continue;
+      sortedMatchesTeam.push(...filteredMatches);
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(`Error reading or parsing ${seasonsResults}:`, err.message);
+      } else {
+        console.error(`Unknown error reading or parsing ${seasonsResults}:`, err);
       }
     }
+
 
     console.log('sortedMatchesTeam: ', sortedMatchesTeam);
 
 
-    const sinceSeason = 2015;
+    const sinceSeason = 2011;
 
     // Variable to store how many matches the two teams played together
     const matchesPlayedTogether = sortedMatchesTeam.length;
@@ -402,6 +386,7 @@ app.get('/getResultByTeam/:firstId/:secoundId', async (req: Request, res: Respon
       }
     }
 
+    sortedMatchesTeam.reverse();
 
 
     res.status(200).json({
@@ -424,16 +409,64 @@ app.get('/getResultByTeam/:firstId/:secoundId', async (req: Request, res: Respon
 
 
 
-app.get('/', async (req: Request, res: Response) => {
-  // const fileContent = await fs.promises.readFile(teamStatsPath, 'utf-8');
-  // const configData = JSON.parse(fileContent);
+app.get('/fetch-all-seasons-results', async (req: Request, res: Response) => {
+  //https://v3.football.api-sports.io/fixtures?league=39&season=2024&status=FT-AET-PEN
+
+  let premierLeagueResults: any = [];
+
   
-  // let premierLeagueStanding = configData.standings[0].table;
+  try {
+
+    for(let seasonNumber = 2011; seasonNumber <= 2024; seasonNumber++) {
+      const config: AxiosRequestConfig = {
+        method: 'get',
+        url: `https://v3.football.api-sports.io/fixtures?league=39&season=${seasonNumber}&status=FT-AET-PEN`,
+        headers: {
+          'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+          'x-rapidapi-host': 'v3.football.api-sports.io',
+        },
+        params: {
+          
+        },
+    
+        timeout: 5000
+      };
+    
+    
+        const response = await axios(config);
+    
+        for(let i = 0; i < response.data.response.length; i++) {
+          premierLeagueResults.push(response.data.response[i]);
+        }
+
   
-  // console.log(premierLeagueStanding);
-  res.json();
+        await sleep(5500);
+    }
+  
+    premierLeagueResults.reverse();
+
+    await fs.promises.writeFile(leagueResultpath, JSON.stringify(premierLeagueResults, null, 2), 'utf-8');
+    console.log("Successfully wrote to file!");
+
+    res.json({ message: "File written successfully", data: premierLeagueResults});
+    
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Failed to fetch leagues' });
+  }
 
 });
+
+
+app.get('/', async (req: Request, res: Response) => {
+  // await fs.promises.writeFile('./teamStats.json', 'Tjaba', 'utf-8');
+  // console.log("Successfully wrote to file!");
+
+  res.status(200).send('Helllo');
+
+});
+
+
 
 
 

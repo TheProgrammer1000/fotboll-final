@@ -40,7 +40,8 @@ interface TeamStats {
   winsAway: number;
   lossesHome: number;
   lossesAway: number;
-  draw: number;
+  drawHome: number;
+  drawAway: number;
   totalWins: number;
 }
 
@@ -236,7 +237,8 @@ app.get('/head-to-head/:firstId/:secoundId', async (req: Request, res: Response)
         winsAway: 0,
         lossesHome: 0,
         lossesAway: 0,
-        draw: 0,
+        drawHome: 0,
+        drawAway: 0,
         totalWins: 0,
       },
     };
@@ -248,7 +250,8 @@ app.get('/head-to-head/:firstId/:secoundId', async (req: Request, res: Response)
         winsAway: 0,
         lossesHome: 0,
         lossesAway: 0,
-        draw: 0,
+        drawHome: 0,
+        drawAway: 0,
         totalWins: 0,
       },
     };
@@ -287,6 +290,8 @@ app.get('/head-to-head/:firstId/:secoundId', async (req: Request, res: Response)
     // Variable to store how many matches the two teams played together
     const matchesPlayedTogether = sortedMatchesTeam.length;
 
+    console.log(matchesPlayedTogether);
+
     // Update team statistics based on each match result
     for (const match of sortedMatchesTeam) {
       if (match.teams.home.id === team1.id) {
@@ -302,8 +307,8 @@ app.get('/head-to-head/:firstId/:secoundId', async (req: Request, res: Response)
           team2Final[team2.id].totalWins++;
         } else {
           // Draw: update draw property for both teams
-          team1Final[team1.id].draw++;
-          team2Final[team2.id].draw++;
+          team1Final[team1.id].drawHome++;
+          team2Final[team2.id].drawAway++;
         }
       } else if (match.teams.home.id === team2.id) {
         if (match.teams.home.winner === true) {
@@ -318,8 +323,8 @@ app.get('/head-to-head/:firstId/:secoundId', async (req: Request, res: Response)
           team1Final[team1.id].totalWins++;
         } else {
           // Draw: update draw property for both teams
-          team2Final[team2.id].draw++;
-          team1Final[team1.id].draw++;
+          team2Final[team2.id].drawHome++;
+          team1Final[team1.id].drawAway++;
         }
       }
     }

@@ -5,10 +5,12 @@ import fs from 'fs';
 import { config } from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
+import connection from "./database";
 
 
 
 const app = express();
+
 
 const teamIdPath = './teamIds.json';
 const teamStatsPath = './teamStats.json';
@@ -36,13 +38,19 @@ const oddsOfSeasonPath = './oddsSeasonResult.json';
 
 interface TeamStats {
   name: string;
-  winsHome: number;
-  winsAway: number;
-  lossesHome: number;
-  lossesAway: number;
-  drawHome: number;
-  drawAway: number;
-  totalWins: number;
+
+  wins: {winsHome: number, winsAway: number;}
+  draw: {drawHome: number, drawAway: number;}
+  loses: {losesHome: number, losesAway: number;}
+
+  matchResult: {wins: number, draws: number, loses: number};
+
+  goals: {goalsHome: number, goalsAway: number, goalsConceded: number},
+  goalsTotal: number,
+
+  matchesPlayed: number
+
+  
 }
 
 
@@ -206,6 +214,25 @@ app.get('/get-fetch-teamStats-json', async (req: Request, res: Response) => {
 
 // Helper function to delay execution for a given number of milliseconds.
 //http://localhost:3000/head-to-head?team1=${selectedTeam1}&team2=${selectedTeam2}
+function calculateTeamStats(team: any, goalsConceded: number) {
+  const winRate = (team.matchResult.wins / team.matchesPlayed) * 100;
+  const totalPoints = (team.matchResult.wins * 3) + team.matchResult.draws;
+  const goalsPerMatch = team.goalsTotal / team.matchesPlayed;
+  const goalDifference = team.goalsTotal - goalsConceded;
+  const homeWinRate = (team.wins.winsHome / (team.wins.winsHome + team.draw.drawHome + team.loses.losesHome)) * 100;
+  const awayWinRate = (team.wins.winsAway / (team.wins.winsAway + team.draw.drawAway + team.loses.losesAway)) * 100;
+  
+  return {
+    winRate,
+    totalPoints,
+    goalsPerMatch,
+    goalDifference,
+    homeWinRate,
+    awayWinRate
+  };
+}
+
+
 
 app.get('/head-to-head/:firstId/:secoundId', async (req: Request, res: Response) => {
   const firstId = parseInt(req.params.firstId, 10);
@@ -233,26 +260,34 @@ app.get('/head-to-head/:firstId/:secoundId', async (req: Request, res: Response)
     let team1Final: Record<number, TeamStats> = {
       [team1.id]: {
         name: team1.teamName,
-        winsHome: 0,
-        winsAway: 0,
-        lossesHome: 0,
-        lossesAway: 0,
-        drawHome: 0,
-        drawAway: 0,
-        totalWins: 0,
+        
+        wins: {winsHome: 0, winsAway: 0},
+        loses: {losesHome: 0,losesAway: 0},
+        draw: {drawHome: 0, drawAway: 0},
+
+        matchResult: {wins: 0, draws: 0, loses: 0},
+
+        goals: {goalsHome: 0, goalsAway: 0, goalsConceded: 0},
+        goalsTotal: 0,
+        
+        matchesPlayed: 0
       },
     };
 
     let team2Final: Record<number, TeamStats> = {
       [team2.id]: {
         name: team2.teamName,
-        winsHome: 0,
-        winsAway: 0,
-        lossesHome: 0,
-        lossesAway: 0,
-        drawHome: 0,
-        drawAway: 0,
-        totalWins: 0,
+        
+        wins: {winsHome: 0, winsAway: 0},
+        loses: {losesHome: 0,losesAway: 0},
+        draw: {drawHome: 0, drawAway: 0},
+
+        matchResult: {wins: 0, draws: 0, loses: 0},
+
+        goals: {goalsHome: 0, goalsAway: 0, goalsConceded: 0},
+        goalsTotal: 0,
+
+        matchesPlayed: 0
       },
     };
 
@@ -284,61 +319,142 @@ app.get('/head-to-head/:firstId/:secoundId', async (req: Request, res: Response)
       }
     }
 
-
     const sinceSeason = 2011;
 
     // Variable to store how many matches the two teams played together
     const matchesPlayedTogether = sortedMatchesTeam.length;
-
-    console.log(matchesPlayedTogether);
 
     // Update team statistics based on each match result
     for (const match of sortedMatchesTeam) {
       if (match.teams.home.id === team1.id) {
         if (match.teams.home.winner === true) {
           // Team1 wins at home
-          team1Final[team1.id].totalWins++;
-          team1Final[team1.id].winsHome++;
-          team2Final[team2.id].lossesAway++;
+          team1Final[team1.id].wins.winsHome++;
+          team1Final[team1.id].matchResult.wins++;
+
+          team2Final[team2.id].loses.losesAway++;
+          team2Final[team2.id].matchResult.loses++;
+
         } else if (match.teams.home.winner === false) {
           // Team2 wins away
-          team1Final[team1.id].lossesHome++;
-          team2Final[team2.id].winsAway++;
-          team2Final[team2.id].totalWins++;
+          team1Final[team1.id].loses.losesHome++;
+          team1Final[team1.id].matchResult.loses++;
+
+
+          team2Final[team2.id].wins.winsAway++;
+          team2Final[team2.id].matchResult.wins++;
         } else {
           // Draw: update draw property for both teams
-          team1Final[team1.id].drawHome++;
-          team2Final[team2.id].drawAway++;
+          team1Final[team1.id].draw.drawHome++;
+          team1Final[team1.id].matchResult.draws++;
+
+          team2Final[team2.id].draw.drawAway++;
+          team2Final[team2.id].matchResult.draws++;
         }
       } else if (match.teams.home.id === team2.id) {
         if (match.teams.home.winner === true) {
           // Team2 wins at home
-          team2Final[team2.id].winsHome++;
-          team2Final[team2.id].totalWins++;
-          team1Final[team1.id].lossesAway++;
+          team2Final[team2.id].wins.winsHome++;
+          team2Final[team2.id].matchResult.wins++;
+
+          team1Final[team1.id].loses.losesAway++;
+          team1Final[team1.id].matchResult.loses++;
+
         } else if (match.teams.home.winner === false) {
           // Team1 wins away
-          team2Final[team2.id].lossesHome++;
-          team1Final[team1.id].winsAway++;
-          team1Final[team1.id].totalWins++;
+          team2Final[team2.id].loses.losesHome++;
+          team2Final[team2.id].matchResult.loses++;
+        
+
+          team1Final[team1.id].wins.winsAway++;
+          team1Final[team1.id].matchResult.wins++;
         } else {
           // Draw: update draw property for both teams
-          team2Final[team2.id].drawHome++;
-          team1Final[team1.id].drawAway++;
+          team2Final[team2.id].draw.drawHome++;
+          team2Final[team2.id].matchResult.draws++;
+
+          team1Final[team1.id].draw.drawAway++;
+          team1Final[team1.id].matchResult.draws++;
         }
       }
     }
 
+    for (const match of sortedMatchesTeam) { 
+      if(match.teams.home.id == team1.id) {
+        team1Final[team1.id].goals.goalsHome += match.goals.home;
+        team2Final[team2.id].goals.goalsAway += match.goals.away;
+
+        team1Final[team1.id].goalsTotal += match.goals.home;
+        team2Final[team2.id].goalsTotal += match.goals.away;
+
+        // Calculate goals conceded:
+        team1Final[team1.id].goals.goalsConceded += match.goals.away;
+        team2Final[team2.id].goals.goalsConceded += match.goals.home;
+      }
+      else if(match.teams.home.id == team2.id) {
+        team2Final[team2.id].goals.goalsHome += match.goals.home;
+        team1Final[team1.id].goals.goalsAway += match.goals.away;
+
+        team2Final[team2.id].goalsTotal += match.goals.home;
+        team1Final[team1.id].goalsTotal += match.goals.away;
+
+        // Calculate goals conceded:
+        team2Final[team2.id].goals.goalsConceded += match.goals.away;
+        team1Final[team1.id].goals.goalsConceded += match.goals.home;
+      }
+    }
+
+
+    team1Final[team1.id].matchesPlayed = matchesPlayedTogether;
+    team2Final[team2.id].matchesPlayed = matchesPlayedTogether;
     //sortedMatchesTeam.reverse();
+
+
+
+    for (const match of sortedMatchesTeam) { 
+      if (match.teams.home.id === team1.id) {
+        // When team1 is playing at home:
+        // - Team1 scores match.goals.home and concedes match.goals.away.
+        // - Team2, playing away, scores match.goals.away and concedes match.goals.home.
+        team1Final[team1.id].goals.goalsHome += match.goals.home;
+        team2Final[team2.id].goals.goalsAway += match.goals.away;
+    
+        team1Final[team1.id].goalsTotal += match.goals.home;
+        team2Final[team2.id].goalsTotal += match.goals.away;
+        
+        // Calculate goals conceded:
+        team1Final[team1.id].goals.goalsConceded += match.goals.away;
+        team2Final[team2.id].goals.goalsConceded += match.goals.home;
+      }
+      else if (match.teams.home.id === team2.id) {
+        // When team2 is playing at home:
+        // - Team2 scores match.goals.home and concedes match.goals.away.
+        // - Team1, playing away, scores match.goals.away and concedes match.goals.home.
+        team2Final[team2.id].goals.goalsHome += match.goals.home;
+        team1Final[team1.id].goals.goalsAway += match.goals.away;
+    
+        team2Final[team2.id].goalsTotal += match.goals.home;
+        team1Final[team1.id].goalsTotal += match.goals.away;
+        
+        // Calculate goals conceded:
+        team2Final[team2.id].goals.goalsConceded += match.goals.away;
+        team1Final[team1.id].goals.goalsConceded += match.goals.home;
+      }
+    }
+
+    let team1Statistics = calculateTeamStats(team1Final[team1.id], team1Final[team1.id].goals.goalsConceded);
+    let team2Statistics = calculateTeamStats(team2Final[team2.id], team2Final[team2.id].goals.goalsConceded);
 
 
     res.status(200).json({
       team1: team1Final[team1.id],
       team2: team2Final[team2.id],
       matches: sortedMatchesTeam,
-      matchesPlayedTogether,
-      sinceSeason
+      sinceSeason,
+      team1Statistics,
+      team2Statistics
     });
+
   } catch (err) {
     if (err instanceof Error) {
       console.error('An error occurred:', err.message);

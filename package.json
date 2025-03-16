@@ -6,7 +6,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "helmet": "^8.0.0"
+    "helmet": "^8.0.0",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.13.0"
   },
   "name": "fotboll-final",
   "version": "1.0.0",
@@ -24,6 +26,7 @@
     "@types/axios": "^0.14.0",
     "@types/cors": "^2.8.17",
     "@types/helmet": "^0.0.48",
+    "@types/mysql": "^2.15.26",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2"
   }

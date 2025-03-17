@@ -7,6 +7,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import connection from "./database";
 
+import  { exec } from 'child_process';
+
 
 
 const app = express();
@@ -16,6 +18,8 @@ const teamIdPath = './teamIds.json';
 const teamStatsPath = './teamStats.json';
 const leagueResultpath = './seasonResults.json'
 const oddsOfSeasonPath = './oddsSeasonResult.json';
+
+const getAllFixturesFromSeasonPath = './getAllFixturesFromSeason.json';
 
 
 
@@ -580,6 +584,65 @@ app.get('/', async (req: Request, res: Response) => {
 
 
 
+app.get('/getAllFixturesOnSeason/:season', async (req: Request, res: Response) => {
+  const seasonQueryParameter = parseInt(req.params.season, 10);
+
+
+  const config: AxiosRequestConfig = {
+    method: 'get',
+    url: `https://v3.football.api-sports.io/fixtures?league=39&season=${seasonQueryParameter}&status=FT-AET-PEN`,
+    headers: {
+      'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+      'x-rapidapi-host': 'v3.football.api-sports.io',
+    },
+    params: {
+      
+    },
+
+    timeout: 5000
+  };
+
+  try {
+    const response = await axios(config);
+
+    await fs.promises.writeFile(getAllFixturesFromSeasonPath, JSON.stringify(response.data.response, null, 2), 'utf-8');
+    console.log("Successfully wrote to file!");
+
+    
+
+    res.json({ message: "File written successfully", data: response.data.response});
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Failed to fetch leagues' });
+  };
+});
+
+app.get('/getAllFixturesOnSeason-json', async (req: Request, res: Response) => {
+  try {
+
+    let arrayOfFixtureIDs: any = [];
+
+    const file = await fs.promises.readFile(getAllFixturesFromSeasonPath, 'utf-8');
+    const parseFile = JSON.parse(file);
+    //console.log("Successfully wrote to file!");
+    // parseFile.fixture.id
+    // Respond only once after successfully writing to file.
+    parseFile.forEach((matchInfo: any) => {
+      arrayOfFixtureIDs.push(matchInfo.fixture.id);
+    });
+
+    console.log(arrayOfFixtureIDs)
+    
+    res.json(arrayOfFixtureIDs);
+  } 
+  catch (error) {
+    console.error('Error reading or parsing file:', error);
+    res.status(500).json({ message: 'Failed to retrieve team IDs' });
+  }
+});
+
+
 
 /*
   Included both home and away statistics for both teams
@@ -601,6 +664,243 @@ The response will now include:
 
     Full match history between the teams
 
+
+
+*/
+
+
+
+app.get('/allAreasFromAnotherApi', async (req: Request, res: Response) => {
+  const curlCommand = "curl -XGET 'http://api.football-data.org/v4/areas/'";
+
+  exec(curlCommand, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing curl: ${error}`);
+      return;
+    }
+
+    try {
+      // Convert the JSON string into an object
+      const jsonData = JSON.parse(stdout);
+      
+      
+      // Write the JSON object back to a file (formatted with indentation)
+      fs.writeFile('areas.json', JSON.stringify(jsonData, null, 2), 'utf8', (err) => {
+        if (err) {
+          console.error("Error writing JSON to file:", err);
+          return;
+        }
+        console.log("Successfully wrote JSON data to areas.json");
+        res.json(jsonData);
+      });
+    } catch (parseError) {
+      console.error("Error parsing JSON:", parseError);
+    }
+  });
+  
+});
+
+
+
+app.get('/allAreasFromAnotherApi-json', async (req: Request, res: Response) => {
+  
+  try {
+    const file = await fs.promises.readFile('./areas.json', 'utf-8');
+    const fileParsed = JSON.parse(file);
+
+    let englandObj: any = {};
+
+    fileParsed.areas.forEach((areas:any) => {
+      if(areas.name == "England") {
+        englandObj = areas;
+      }
+    });
+    
+
+    // stdout contains the JSON output from the API
+    fs.writeFile('England.json', JSON.stringify(englandObj, null, 2), 'utf8', (err) => {
+      if (err) {
+        console.error('Error writing JSON to file:', err);
+        return;
+      }
+      console.log("Successfully wrote JSON data to person.json");
+    });
+
+  res.json({ data: fileParsed});
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Failed to fetch leagues' });
+  }
+
+});
+
+
+app.get('/getEngland-json', async (req: Request, res: Response) => {
+  
+  try {
+    const file = await fs.promises.readFile('./England.json', 'utf-8');
+    const fileParsed = JSON.parse(file);
+
+    let englandObj: any = fileParsed;
+
+    
+
+    // stdout contains the JSON output from the API
+   
+    res.json({ data: englandObj});
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Failed to fetch leagues' });
+  }
+
+});
+
+
+
+app.get('/getUpcomingMatches', async (req: Request, res: Response) => {
+  const apiToken = process.env.API_TOKEN_SECOUND || 'YOUR_API_TOKEN';
+
+  //curl -XGET 'https://api.football-data.org/v4/competitions/PL/matches?matchday=11' -H "X-Auth-Token: UR_TOKEN"
+  const curlCommand = `curl -XGET 'https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED' -H "X-Auth-Token: ${apiToken}"`;
+  //  curl -XGET 'https://api.football-data.org/v4/competitions/PL/matches' -H "X-Auth-Token: 3059c372f591408db27f55b56f17b59e";
+
+
+  exec(curlCommand, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing curl: ${error}`);
+      return;
+    }
+
+    try {
+      // Convert the JSON string into an object
+      const jsonData = JSON.parse(stdout);
+      
+      
+      // Write the JSON object back to a file (formatted with indentation)
+      fs.writeFile('upComingMatches.json', JSON.stringify(jsonData, null, 2), 'utf8', (err) => {
+        if (err) {
+          console.error("Error writing JSON to file:", err);
+          return;
+        }
+        console.log("Successfully wrote JSON data to areas.json");
+        res.json(jsonData);
+      });
+    } catch (parseError) {
+      console.error("Error parsing JSON:", parseError);
+    }
+  });
+  
+});
+
+
+
+app.get('/getUpcomingMatches-json', async (req: Request, res: Response) => {
+
+
+  try {
+    const file = await fs.promises.readFile('./upComingMatches.json', 'utf-8');
+    const fileParsed = JSON.parse(file);
+
+    let upcomingMatches: any = fileParsed;
+
+    
+
+    // stdout contains the JSON output from the API
+   
+    res.json({ data: upcomingMatches});
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Failed to fetch leagues' });
+  }
+  
+});
+
+
+
+app.get('/getTeamsAndPlayer', async (req: Request, res: Response) => {
+  const apiToken = process.env.API_TOKEN_SECOUND || 'YOUR_API_TOKEN';
+
+  const season = 2024;
+  //curl -XGET 'https://api.football-data.org/v4/competitions/PL/matches?matchday=11' -H "X-Auth-Token: UR_TOKEN"
+  const curlCommand = `curl -XGET 'https://api.football-data.org/v4/competitions/PL/teams/?season=${season}' -H "X-Auth-Token: ${apiToken}"`;
+  //  curl -XGET 'https://api.football-data.org/v4/competitions/PL/matches' -H "X-Auth-Token: 3059c372f591408db27f55b56f17b59e";
+
+
+  exec(curlCommand, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing curl: ${error}`);
+      return;
+    }
+
+    try {
+      // Convert the JSON string into an object
+      const jsonData = JSON.parse(stdout);
+      
+      
+      // Write the JSON object back to a file (formatted with indentation)
+      fs.writeFile('teamsAndPlayers.json', JSON.stringify(jsonData, null, 2), 'utf8', (err) => {
+        if (err) {
+          console.error("Error writing JSON to file:", err);
+          return;
+        }
+        console.log("Successfully wrote JSON data to areas.json");
+        res.json(jsonData);
+      });
+    } catch (parseError) {
+      console.error("Error parsing JSON:", parseError);
+    }
+  });
+  
+});
+
+
+app.get('/getTeamsAndPlayer-json', async (req: Request, res: Response) => {
+
+
+  try {
+    const file = await fs.promises.readFile('./teamsAndPlayers.json', 'utf-8');
+    const fileParsed = JSON.parse(file);
+
+    let teamsAndPlayers: any = fileParsed;
+
+    
+
+    // stdout contains the JSON output from the API
+   console.log(teamsAndPlayers);
+    
+    res.json({ data: teamsAndPlayers});
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Failed to fetch leagues' });
+  }
+  
+});
+
+
+//  curl -XGET 'https://api.football-data.org/v4/competitions/PL/teams/?season=2024' -H "X-Auth-Token: 3059c372f591408db27f55b56f17b59e"
+
+/*
+const curlCommand = "curl -XGET ' curl -XGET 'https://api.football-data.org/v4/competitions/PL/teams/?season=2024' -H "X-Auth-Token: 3059c372f591408db27f55b56f17b59e"'";
+
+exec(curlCommand, (error, stdout, stderr) => {
+  if (error) {
+    console.error(`Error executing curl: ${error}`);
+    return;
+  }
+
+  // stdout contains the JSON output from the API
+  fs.writeFile('person.json', stdout, 'utf8', (err) => {
+    if (err) {
+      console.error('Error writing JSON to file:', err);
+      return;
+    }
+    console.log("Successfully wrote JSON data to person.json");
+  });
+});
 
 
 */

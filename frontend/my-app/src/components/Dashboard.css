@@ -1,0 +1,14 @@
+.dashboard-container {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .left-column {
+    flex: 1;       /* or a fixed width if you prefer */
+    margin-right: 20px;
+  }
+  
+  .right-column {
+    flex: 1;       /* or a fixed width */
+  }
+  

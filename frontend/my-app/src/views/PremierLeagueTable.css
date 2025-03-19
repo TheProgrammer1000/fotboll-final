@@ -1,0 +1,115 @@
+.league-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.league-title {
+  color: #37003c;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.table-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.league-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.league-table th {
+  background: #f8f7fa;
+  color: #37003c;
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+}
+
+.league-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.table-row {
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.table-row:hover {
+  background: #faf9fc;
+}
+
+.position {
+  font-weight: 500;
+  color: #666;
+  width: 40px;
+}
+
+.club {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.club img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.points {
+  font-weight: 600;
+  color: #37003c;
+}
+
+.expanded {
+  background: #fbfaff;
+}
+
+.expanded-content {
+  padding: 1.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  max-width: 600px;
+}
+
+.stat-item {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-item h4 {
+  margin: 0 0 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.stat-item p {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #37003c;
+}
+
+.loading, .error {
+  padding: 2rem;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.error {
+  color: #dc3545;
+}

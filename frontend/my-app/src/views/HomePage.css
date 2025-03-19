@@ -1,0 +1,26 @@
+.homepage-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 1rem;
+    box-sizing: border-box;
+  }
+  
+  /* Put both headers on the same horizontal row */
+  .header-row {
+    display: flex;
+    justify-content: space-between; /* One title on the left, one on the right */
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  /* Two columns side-by-side */
+  .content-row {
+    display: flex;
+    gap: 2rem; /* Space between columns */
+  }
+  
+  .left-column,
+  .right-column {
+    flex: 1; /* Let them share available space */
+  }
+  

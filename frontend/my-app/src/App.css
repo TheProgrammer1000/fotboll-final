@@ -1,5 +1,13 @@
 * {
   padding: 0; 
-  margin: 0;
+  /* margin: 0; */
   box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  --primary-border-color: #e0dce3;
+  --secondary-bg: #070607;
+  --primary-text: #37003c;
+  --card-header-bg: #f3f0f5;
 }

@@ -1,6 +1,6 @@
 import React from 'react';
-import UpcomingMatches from '../components/UpcomingMatches'
-import PremierLeagueTable from './PremierLeagueTable';
+import UpcomingMatches from '../components/UpcomingMatchesTable'
+import PremierLeagueTable from '../components/PremierLeagueTable';
 import './HomePage.css';
 
 const HomePage: React.FC = () => {

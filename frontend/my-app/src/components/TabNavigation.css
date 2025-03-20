@@ -1,0 +1,34 @@
+/* Container for the tabs */
+.tabs-container {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 1rem;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  
+  /* Each tab button */
+  .tab {
+    background: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #666;
+    transition: background 0.2s ease;
+    border-bottom: 2px solid transparent;
+    font-weight: 500; /* Keeps text size consistent */
+  }
+  
+  /* Hover effect */
+  .tab:hover {
+    background-color: #faf9fc;
+  }
+  
+  /* Active tab (highlighted) */
+  .tab.active {
+    color: #37003c;
+    border-bottom-color: #37003c;
+    /* Keeping the same font-weight so it doesn't "grow" */
+  }
+  

@@ -113,3 +113,35 @@
 .error {
   color: #dc3545;
 }
+
+/* A small flex container for the logo and team name */
+.team-cell {
+  display: flex;
+  align-items: center;
+}
+
+/* Size the team logos as you wish */
+.team-logo {
+  width: 20px;  /* Adjust as desired */
+  height: 20px;
+  margin-right: 0.5rem;
+  object-fit: contain;
+}
+
+/* Make the recent matches table nice and tidy */
+.recent-matches-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.recent-matches-table th,
+.recent-matches-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.table-row.highlight {
+  background-color: #e6e6e6; /* your desired highlight color */
+}

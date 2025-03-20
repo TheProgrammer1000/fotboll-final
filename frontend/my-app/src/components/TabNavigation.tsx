@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// TabNavigation.tsx
+import React from 'react';
 import './TabNavigation.css';
 import axios from 'axios';
 import TableTeam from './interface/TableTeam';
@@ -6,22 +7,20 @@ import TableTeam from './interface/TableTeam';
 export interface TabNavigationProps {
   teams: TableTeam[];
   updateTeams: (teams: TableTeam[]) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
 }
 
-const TabNavigation: React.FC<TabNavigationProps> = ({ teams, updateTeams }) => {
+const TabNavigation: React.FC<TabNavigationProps> = ({ teams, updateTeams, activeTab, setActiveTab }) => {
   const tabs = ['Sammanlagt', 'Hemma', 'Borta'];
-  const [activeTab, setActiveTab] = useState<string>(tabs[0]);
 
-  // Handle tab click
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
 
     if (tab === 'Hemma') {
       axios.get('http://localhost:3000/team-stats/home')
         .then((response) => {
-          console.log('response.data: ', response.data)
-
-          let teamsStats: TableTeam[] = response.data.map((team: TableTeam) => team);
+          let teamsStats: TableTeam[] = response.data;
           teamsStats.sort((a: TableTeam, b: TableTeam) => b.Points - a.Points);
           updateTeams(teamsStats);
         })
@@ -31,7 +30,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ teams, updateTeams }) => 
     } else if (tab === 'Borta') {
       axios.get('http://localhost:3000/team-stats/away')
         .then((response) => {
-          let teamsStats: TableTeam[] = response.data.map((team: TableTeam) => team);
+          let teamsStats: TableTeam[] = response.data;
           teamsStats.sort((a: TableTeam, b: TableTeam) => b.Points - a.Points);
           updateTeams(teamsStats);
         })
@@ -39,10 +38,9 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ teams, updateTeams }) => 
           console.error(err);
         });
     } else {
-      // For "Sammanlagt", you can either refetch or simply restore the full list if available.
       axios.get('http://localhost:3000/team-stats')
         .then((response) => {
-          let teamsStats: TableTeam[] = response.data.map((team: TableTeam) => team);
+          let teamsStats: TableTeam[] = response.data;
           teamsStats.sort((a: TableTeam, b: TableTeam) => b.Points - a.Points);
           updateTeams(teamsStats);
         })

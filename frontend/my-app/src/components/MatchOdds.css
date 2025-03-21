@@ -1,0 +1,36 @@
+.expanded-odds-container {
+    margin-top: 1rem;
+    padding: 1rem;
+    /* background: linear-gradient(135deg, #516d7b, #5b60bd); */
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(55, 0, 60, 0.1);
+    color: #37003c; /* Modern text color */
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  
+  .match-odds-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: #37003c;
+  }
+  
+  .match-odds-table th,
+  .match-odds-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .match-odds-table th {
+    /* background-color: #845cd4; */
+    /* font-weight: 600; */
+    /* text-transform: uppercase; */
+    letter-spacing: 0.5px;
+  }
+  
+  .match-odds-table tr:hover {
+    background-color: rgba(55, 0, 60, 0.05);
+  }
+  

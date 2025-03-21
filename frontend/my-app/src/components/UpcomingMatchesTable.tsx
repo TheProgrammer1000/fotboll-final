@@ -1,8 +1,7 @@
-// UpcomingMatchesTable.tsx
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './UpcomingMatchesTable.css';
+import MatchOdds from './MatchOdds';
 
 interface Match {
   FixtureID: string;
@@ -16,7 +15,6 @@ interface Match {
   max_odds1: string;
   max_oddsx: string;
   max_odds2: string;
-  // Add these new fields to match your API response
   bookmaker_odds1: string;
   bookmaker_oddsx: string;
   bookmaker_odds2: string;
@@ -65,7 +63,8 @@ interface UpcomingMatchesProps {
 
 const UpcomingMatches: React.FC<UpcomingMatchesProps> = ({ onMatchSelect }) => {
   const [matches, setMatches] = useState<Match[]>([]);
-  const [selectedOdds, setSelectedOdds] = useState<{ [key: number]: number }>({});
+  const [selectedOdds, setSelectedOdds] = useState<{ [key: string]: number }>({});
+  const [expandedMatchIds, setExpandedMatchIds] = useState<string[]>([]);
 
   useEffect(() => {
     axios
@@ -77,11 +76,19 @@ const UpcomingMatches: React.FC<UpcomingMatchesProps> = ({ onMatchSelect }) => {
       .catch(err => console.error('Error fetching matches:', err));
   }, []);
 
-  const handleOddsSelect = (matchId: number, index: number) => {
+  const handleOddsSelect = (matchId: string, index: number) => {
     setSelectedOdds(prev => ({ ...prev, [matchId]: index }));
   };
 
   const handleMatchClick = (match: Match) => {
+    // Toggle expansion for this match.
+    setExpandedMatchIds(prev => {
+      if (prev.includes(match.FixtureID)) {
+        return prev.filter(id => id !== match.FixtureID);
+      } else {
+        return [...prev, match.FixtureID];
+      }
+    });
     onMatchSelect([match.HomeTeamID, match.AwayTeamID]);
   };
 
@@ -93,49 +100,57 @@ const UpcomingMatches: React.FC<UpcomingMatchesProps> = ({ onMatchSelect }) => {
           <div className="date-header">{date}</div>
           <div className="matches-list">
             {matches.map(match => {
-              // Create an array to pair each max_odds with its corresponding bookmaker
               const oddsData = [
                 { oddValue: match.max_odds1, bookmaker: match.bookmaker_odds1 },
                 { oddValue: match.max_oddsx, bookmaker: match.bookmaker_oddsx },
                 { oddValue: match.max_odds2, bookmaker: match.bookmaker_odds2 },
               ];
 
+              const isExpanded = expandedMatchIds.includes(match.FixtureID);
+
               return (
-                <div
-                  key={match.FixtureID}
-                  className="match-card"
-                  onClick={() => handleMatchClick(match)}
-                >
-                  <div className="match-info">
-                    <span className="match-time">{formatTime(match.FixtureDate)}</span>
-                    <div className="teams">
-                      <span className="team">{match.HomeTeamName}</span>
-                      <span className="vs">vs</span>
-                      <span className="team">{match.AwayTeamName}</span>
+                <div key={match.FixtureID} className="match-card">
+                  {/* The entire match-info row is clickable */}
+                  <div className="match-info" onClick={() => handleMatchClick(match)}>
+                    <div className="match-main">
+                      <span className="match-time">{formatTime(match.FixtureDate)}</span>
+                      <div className="teams">
+                        <span className="team">{match.HomeTeamName}</span>
+                        <span className="vs">vs</span>
+                        <span className="team">{match.AwayTeamName}</span>
+                      </div>
+                    </div>
+                    {/* Odds container gets a highlight class if expanded */}
+                    <div className={`odds-container ${isExpanded ? 'highlight' : ''}`}>
+                      {oddsData.map((item, index) => {
+                        const numericOdd = parseFloat(item.oddValue);
+                        return (
+                          <button
+                            key={index}
+                            className={`odds-btn ${
+                              selectedOdds[match.FixtureID] === index ? 'selected' : ''
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOddsSelect(match.FixtureID, index);
+                            }}
+                          >
+                            <div className="odds-text">
+                              {!isNaN(numericOdd) ? numericOdd.toFixed(2) : 'N/A'}
+                              <span className="odds-provider">{item.bookmaker}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="odds-container">
-                    {oddsData.map((item, index) => {
-                      const numericOdd = parseFloat(item.oddValue);
-                      return (
-                        <button
-                          key={index}
-                          className={`odds-btn ${
-                            selectedOdds[parseInt(match.FixtureID)] === index ? 'selected' : ''
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOddsSelect(parseInt(match.FixtureID), index);
-                          }}
-                        >
-                          <div className="odds-text">
-                            {!isNaN(numericOdd) ? numericOdd.toFixed(2) : 'N/A'}
-                            <span className="odds-provider">{item.bookmaker}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+
+                  {/* Expanded odds section below */}
+                  {isExpanded && (
+                    <div className="expanded-odds">
+                      <MatchOdds fixtureID={match.FixtureID} />
+                    </div>
+                  )}
                 </div>
               );
             })}

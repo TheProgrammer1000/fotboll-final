@@ -1,3 +1,4 @@
+/* Container for all matches */
 .matches-container {
   max-width: 800px;
   margin: 2rem auto;
@@ -13,6 +14,7 @@
   }
 }
 
+/* Main title */
 .matches-title {
   color: #37003c;
   font-size: 1.8rem;
@@ -29,6 +31,7 @@
   }
 }
 
+/* Each date group container */
 .date-group {
   margin-bottom: 1.5rem;
   background: white;
@@ -42,6 +45,7 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Header with date text */
 .date-header {
   background: linear-gradient(to right, #f8f7fa, #f0eef3);
   padding: 1rem;
@@ -51,17 +55,24 @@
   letter-spacing: 0.5px;
 }
 
+/* List of matches under that date */
 .matches-list {
   padding: 0 1rem;
 }
 
+/* 
+   Each match card. 
+   Column layout so expanded odds are below the main row.
+*/
 .match-card {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background-color 0.2s ease;
+  flex-direction: column;
+
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
 }
 
 .match-card:hover {
@@ -72,12 +83,25 @@
   border-bottom: none;
 }
 
+/* 
+   The top row of each match (time/teams on the left, odds on the right).
+   We use space-between so the left side stays left, right side stays right.
+*/
 .match-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Left side container for time + teams */
+.match-main {
   display: flex;
   align-items: center;
   gap: 1rem;
+  cursor: pointer; /* So user knows they can click to expand/collapse */
 }
 
+/* Kickoff time styling */
 .match-time {
   color: #00a86b;
   font-weight: 600;
@@ -85,12 +109,14 @@
   font-size: 0.95rem;
 }
 
+/* Teams container */
 .teams {
   display: flex;
   align-items: center;
-  gap: 0.3rem; /* Further reduced gap for tighter alignment */
+  gap: 0.3rem;
 }
 
+/* 'vs' text between teams */
 .vs {
   color: #888;
   font-size: 0.8rem;
@@ -110,25 +136,28 @@
   }
 }
 
+/* Quick odds container (1, X, 2) on the right side */
 .odds-container {
   display: flex;
   gap: 0.5rem;
 }
 
+/* Inside each odds button, stack the odd & provider */
 .odds-text {
   display: flex;
-  flex-direction: column; /* Stack the odd and provider label vertically */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  line-height: 1.2; /* Tweak as needed */
+  line-height: 1.2;
 }
 
 .odds-provider {
-  font-size: 0.75rem; /* Smaller font size */
-  color: #666;        /* A bit lighter to differentiate */
-  margin-top: 2px;    /* Small space above label */
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 2px;
 }
 
+/* The odds button styling */
 .odds-btn {
   width: 70px;
   padding: 0.6rem 0.4rem;
@@ -148,12 +177,6 @@
   border-color: #37003c;
 }
 
-
-.odds-btn.selected .odds-provider {
-  color: white;
-}
-
-
 .odds-btn.selected {
   background: #37003c;
   color: white;
@@ -161,6 +184,13 @@
   box-shadow: 0 2px 4px rgba(55,0,60,0.2);
 }
 
+.odds-btn.selected .odds-provider {
+  color: white;
+}
+
+
+
+/* Responsive adjustments */
 @media (max-width: 600px) {
   .odds-container {
     gap: 0.3rem;
@@ -181,7 +211,7 @@
   }
   
   .odds-container {
-    align-self: stretch;
+    align-self: flex-end; /* or stretch */
     justify-content: space-between;
     width: 100%;
   }
@@ -191,3 +221,7 @@
   }
 }
 
+/* The container that holds the detailed odds (MatchOdds) below the row */
+.expanded-odds {
+  margin-top: 1rem;
+}
